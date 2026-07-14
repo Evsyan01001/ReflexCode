@@ -9,13 +9,13 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-class Client:
+class DeepSeekClient:
     """
     通过 OpenAI SDK 兼容方式接入 DeepSeek。
     DeepSeek 提供与 OpenAI 兼容的 API，只需修改 base_url。
     """
 
-    def _init__(self):
+    def __init__(self):
         self.client = OpenAI(
             api_key=settings.DEEPSEEK_API_KEY,
             base_url=settings.DEEPSEEK_BASE_URL,
