@@ -6,9 +6,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"     # development | production
     
     # ── DeepSeek ──
-    DEEPSEEK_API_KEY: str = ""
+    DEEPSEEK_API_KEY: str = "sk-1e149a80014644d8a5349335f9db86dc"
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
-    DEEPSEEK_MODEL: str = "deepseek-chat"
+    DEEPSEEK_MODEL: str = "deepseek-v4-pro"
     
     # ── MCP Server ──
     MCP_FILE_ROOT: str = "./workspace"          # File MCP 允许操作的根目录
