@@ -24,11 +24,12 @@ class StructuredFormatter(logging.Formatter):
         return json.dumps(log_entry, ensure_ascii=False)
             
 def setup_logging():
-    handler = logging.StreamHandler(sys.stdout)
+    # MCP 协议使用 stdout 传输 JSONRPC，日志必须走 stderr
+    handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(StructuredFormatter())
 
     root_logger = logging.getLogger()
-    root_logger.setLevel(getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO()))
+    root_logger.setLevel(getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO))
     # 清除默认 handler，避免重复
     root_logger.handlers.clear()
     root_logger.addHandler(handler)

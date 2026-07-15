@@ -25,9 +25,10 @@ from mcp.types import (
     INTERNAL_ERROR,
     METHOD_NOT_FOUND,
 )
+from mcp.shared.exceptions import McpError
 
 # 确保项目根在sys.path
-sys.path.insert(0, os.path.join(os.oath.dirname(__file__), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.config import settings
 from app.logger import setup_logging
@@ -35,7 +36,7 @@ from app.logger import setup_logging
 logger = logging.getLogger(__name__)
 
 # 允许的文件操作根目录(安全边界)
-ALLOWED_ROOT = ALLOWED_ROOT = Path(settings.MCP_FILE_ROOT).resolve()
+ALLOWED_ROOT = Path(settings.MCP_FILE_ROOT).resolve()
 ALLOWED_ROOT.mkdir(parents=True, exist_ok=True)
 
 server = Server("file-server")
@@ -47,8 +48,10 @@ def _resolve_path(relative_path: str) -> Path:
     Raises:
         ValueError: 如果解析后的路径越界
     """
-    # 防止空路径
-    if not relative_path or ".." in relative_path.split(os.sep):
+    # 空路径表示根目录本身
+    if not relative_path:
+        return ALLOWED_ROOT
+    if ".." in relative_path.split(os.sep):
         raise ValueError(f"非法的路径: {relative_path}")
     
     target = (ALLOWED_ROOT / relative_path).resolve()
@@ -69,7 +72,7 @@ async def list_tools() -> list[MCPTool]:
                 "type": "object",
                 "properties": {
                     "path": {
-                        "typer": "string",
+                        "type": "string",
                         "description": "相对于工作目录的文件路径, 如 src/main.py",
                     },
                 },
@@ -141,16 +144,16 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             raise ValueError(f"未知工具: {name}")
     except ValueError as e:
         logger.warning("file_mcp_validation_error tool=%s error=%s", name, str(e))
-        raise ErrorData(INVALID_PARAMS, str(e))
+        raise McpError(ErrorData(INVALID_PARAMS, str(e)))
     except FileNotFoundError as e:
         logger.warning("file_mcp_not_found tool=%s error=%s", name, str(e))
-        raise ErrorData(INVALID_PARAMS, str(e))
+        raise McpError(ErrorData(INVALID_PARAMS, str(e)))
     except PermissionError as e:
         logger.error("file_mcp_permission_denied tool=%s error=%s", name, str(e))
-        raise ErrorData(INTERNAL_ERROR, f"权限不足: {e}")
+        raise McpError(ErrorData(INTERNAL_ERROR, f"权限不足: {e}"))
     except Exception as e:
         logger.error("file_mcp_unexpected_error tool=%s error=%s", name, str(e))
-        raise ErrorData(INTERNAL_ERROR, f"内部错误: {e}")
+        raise McpError(ErrorData(INTERNAL_ERROR, f"内部错误: {e}"))
     
 async def _read_file(args: dict) -> list[TextContent]:
     path = _resolve_path(args["path"])
@@ -240,6 +243,6 @@ async def main():
 
         )
 
-if __name__ -- "__main__":
+if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
